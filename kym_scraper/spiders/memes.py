@@ -3,6 +3,7 @@ import json
 from scrapy_redis.spiders import RedisSpider
 from urllib.parse import unquote
 from collections import defaultdict
+from pymongo import MongoClient
 
 from .helper import ChildrenHelper
 
@@ -23,7 +24,12 @@ class MemesSpider(RedisSpider):
 
     # Max idle time(in seconds) before the spider stops checking redis and shuts down
     max_idle_time = 5
+
+    # In-memory list of children to be inserted into the database
     children = []
+
+    # Batch of documents
+    batch = []
 
     def parse(self, response):
         """
@@ -41,7 +47,8 @@ class MemesSpider(RedisSpider):
         if entry["category"] == "Meme":
             entry["content"] = self.parse_content(response)
 
-        yield entry
+        # Add the entry to the batch
+        self.batch.append(entry)
 
     def close(self, reason):
         """
@@ -57,6 +64,11 @@ class MemesSpider(RedisSpider):
         )
         helper.insert_batch(self.children)
         helper.close_connection()
+
+        client = MongoClient("localhost", 27017)
+        db = client["airflow"]
+        collection = db["memes"]
+        collection.insert_many(self.batch)
 
     def parse_content(self, response):
         body = response.css(".bodycopy")
