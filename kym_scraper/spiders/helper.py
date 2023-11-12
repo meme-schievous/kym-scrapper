@@ -30,8 +30,7 @@ class ChildrenHelper:
         create_table_query = """
             CREATE TABLE IF NOT EXISTS children (
                 parent VARCHAR(255),
-                child VARCHAR(255),
-                CONSTRAINT unique_parent_child UNIQUE (parent, child)
+                child VARCHAR(255)
             );
         """
         self.cur.execute(create_table_query)
@@ -50,6 +49,13 @@ class ChildrenHelper:
         """
         self.cur.executemany(insert_query, data_batch)
         self.conn.commit()
+
+    def get_all_tuples(self):
+        select_query = """
+            SELECT parent, child FROM children;
+        """
+        self.cur.execute(select_query)
+        return self.cur.fetchall()
 
     def close_connection(self):
         if self.cur:

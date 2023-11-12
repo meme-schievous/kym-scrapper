@@ -28,8 +28,8 @@ class MemesSpider(RedisSpider):
     # In-memory list of children to be inserted into the database
     children = []
 
-    # Batch of documents
-    batch = []
+    # Setup MongoDB connection
+    client = MongoClient("localhost", 27017)
 
     def parse(self, response):
         """
@@ -47,8 +47,8 @@ class MemesSpider(RedisSpider):
         if entry["category"] == "Meme":
             entry["content"] = self.parse_content(response)
 
-        # Add the entry to the batch
-        self.batch.append(entry)
+        # Insert the entry into the database
+        self.client["airflow"]["memes"].insert_one(entry)
 
     def close(self, reason):
         """
@@ -62,13 +62,9 @@ class MemesSpider(RedisSpider):
             host="localhost",
             port="5432",
         )
+        self.log(f"Inserting {len(self.children)} children into the database")
         helper.insert_batch(self.children)
         helper.close_connection()
-
-        client = MongoClient("localhost", 27017)
-        db = client["airflow"]
-        collection = db["memes"]
-        collection.insert_many(self.batch)
 
     def parse_content(self, response):
         body = response.css(".bodycopy")
@@ -167,6 +163,10 @@ class MemesSpider(RedisSpider):
             self.children.append((parent_url, response.url))
 
         # TODO Find a way to load the iframe with search interest data
+
+        # Prepare both children and siblings fields
+        infos["children"] = []
+        infos["siblings"] = []
 
         return infos
 
