@@ -5,7 +5,7 @@ from urllib.parse import unquote
 from collections import defaultdict
 from pymongo import MongoClient
 
-from .helper import ChildrenHelper
+from ..utils.helper import ChildrenHelper
 
 
 class MemesSpider(RedisSpider):

@@ -1,6 +1,6 @@
 import psycopg2
 from pymongo import MongoClient
-from kym_scraper.spiders.helper import ChildrenHelper
+from helper import ChildrenHelper
 
 # Create an instance of the ChildrenHelper class
 postgres_manager = ChildrenHelper("airflow", "airflow", "airflow", "localhost", "5432")
@@ -29,8 +29,19 @@ for parent, child in all_tuples:
         },
     )
 
-    # Find parent document and print it
-    print(collection.find_one({"url": parent}))
+# For each document in the MongoDB collection, update the siblings list
+for document in collection.find():
+    # If document don't have parent, skip it
+    if "parent" not in document:
+        continue
+    # Update the siblings list here
+    # This is a placeholder, and you should replace it with your actual MongoDB update logic
+    collection.update_many(
+        {"url": {"$ne": document["url"]}, "parent": document["parent"]},
+        {
+            "$push": {"siblings": document["url"]},
+        },
+    )
 
 # Close the MongoDB connection
 client.close()
