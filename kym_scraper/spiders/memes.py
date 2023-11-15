@@ -1,4 +1,5 @@
 import json
+from os import getenv
 
 from scrapy_redis.spiders import RedisSpider
 from urllib.parse import unquote
@@ -29,7 +30,10 @@ class MemesSpider(RedisSpider):
     children = []
 
     # Setup MongoDB connection
-    client = MongoClient("localhost", 27017)
+    mongo_url = getenv("MONGO_URL", "mongodb://localhost:27017")
+    client = MongoClient(mongo_url)
+    mongo_db = getenv("MONGO_DB", "default")
+    mongo_collection = getenv("MONGO_COLLECTION", "default")
 
     def parse(self, response):
         """
@@ -48,7 +52,7 @@ class MemesSpider(RedisSpider):
             entry["content"] = self.parse_content(response)
 
         # Insert the entry into the database
-        self.client["airflow"]["memes"].insert_one(entry)
+        self.client[self.mongo_db][self.mongo_collection].insert_one(entry)
 
     def close(self, reason):
         """
