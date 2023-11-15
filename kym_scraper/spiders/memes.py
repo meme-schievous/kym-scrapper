@@ -58,13 +58,21 @@ class MemesSpider(RedisSpider):
         """
         Called when the spider is closed.
         """
+
+        # Get connection details from environment variables
+        postgres_db = getenv("POSTGRES_DB", "postgres")
+        postgres_user = getenv("POSTGRES_USER", "postgres")
+        postgres_password = getenv("POSTGRES_PASSWORD", "postgres")
+        postgres_host = getenv("POSTGRES_HOST", "localhost")
+        postgres_port = getenv("POSTGRES_PORT", "5432")
+
         # Insert the children into the database
         helper = ChildrenHelper(
-            dbname="airflow",
-            user="airflow",
-            password="airflow",
-            host="localhost",
-            port="5432",
+            postgres_db,
+            postgres_user,
+            postgres_password,
+            postgres_host,
+            postgres_port,
         )
         self.log(f"Inserting {len(self.children)} children into the database")
         helper.insert_batch(self.children)
