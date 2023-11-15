@@ -1,5 +1,5 @@
 import psycopg2
-from psycopg2 import sql
+from os import getenv
 
 
 class ChildrenHelper:
@@ -62,28 +62,3 @@ class ChildrenHelper:
             self.cur.close()
         if self.conn:
             self.conn.close()
-
-
-if __name__ == "__main__":
-    # Replace these values with your PostgreSQL database credentials
-    dbname = "airflow"
-    user = "airflow"
-    password = "airflow"
-    host = "localhost"
-    port = "5432"
-
-    # Create an instance of the PostgreSQLManager class
-    postgres_manager = ChildrenHelper(dbname, user, password, host, port)
-
-    # Example: Insert a single tuple
-    single_data = ("parent1", "child1")
-    postgres_manager.insert_tuple(single_data)
-
-    # Example: Insert a batch of tuples
-    batch_data = [("parent2", "child2"), ("parent3", "child3"), ("parent4", "child4")]
-    postgres_manager.insert_batch(batch_data)
-
-    # Close the database connection
-    postgres_manager.close_connection()
-
-    print("Data inserted successfully.")

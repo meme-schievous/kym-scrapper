@@ -1,4 +1,5 @@
 import redis
+from os import getenv
 
 
 def feed(number_of_pages, redis_url):
@@ -14,4 +15,4 @@ def feed(number_of_pages, redis_url):
 
 
 if __name__ == "__main__":
-    feed(10, "redis://redis:6379")
+    feed(10, getenv("REDIS_URL", "redis://localhost:6379"))

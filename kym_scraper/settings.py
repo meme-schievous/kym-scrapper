@@ -1,3 +1,5 @@
+from os import getenv
+
 # Scrapy settings for kym_scraper project
 #
 # For simplicity, this file contains only settings considered important or
@@ -99,4 +101,4 @@ SCHEDULER = "scrapy_redis.scheduler.Scheduler"
 DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 
 # Set the Redis server URL
-REDIS_URL = "redis://localhost:6379"
+REDIS_URL = getenv("REDIS_URL", "redis://localhost:6379")
