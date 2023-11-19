@@ -1,8 +1,7 @@
 import psycopg2
-from os import getenv
 
 
-class ChildrenHelper:
+class PostgresHelper:
     def __init__(self, dbname, user, password, host, port):
         self.dbname = dbname
         self.user = user
@@ -12,9 +11,8 @@ class ChildrenHelper:
         self.conn = None
         self.cur = None
 
-        # Connect to the database and create the 'children' table
+        # Connect to the database
         self.connect()
-        self.create_children_table()
 
     def connect(self):
         self.conn = psycopg2.connect(
@@ -26,36 +24,14 @@ class ChildrenHelper:
         )
         self.cur = self.conn.cursor()
 
-    def create_children_table(self):
-        create_table_query = """
-            CREATE TABLE IF NOT EXISTS children (
-                parent VARCHAR(255),
-                child VARCHAR(255)
-            );
-        """
-        self.cur.execute(create_table_query)
+    def execute(self, query):
+        self.cur.execute(query)
         self.conn.commit()
+        return self.cur.fetchall() if self.cur.rowcount > 0 else None
 
-    def insert_tuple(self, data):
-        insert_query = """
-            INSERT INTO children (parent, child) VALUES (%s, %s);
-        """
-        self.cur.execute(insert_query, data)
+    def execute_many(self, query, data):
+        self.cur.executemany(query, data)
         self.conn.commit()
-
-    def insert_batch(self, data_batch):
-        insert_query = """
-            INSERT INTO children (parent, child) VALUES (%s, %s);
-        """
-        self.cur.executemany(insert_query, data_batch)
-        self.conn.commit()
-
-    def get_all_tuples(self):
-        select_query = """
-            SELECT parent, child FROM children;
-        """
-        self.cur.execute(select_query)
-        return self.cur.fetchall()
 
     def close_connection(self):
         if self.cur:

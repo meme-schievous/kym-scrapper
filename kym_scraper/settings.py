@@ -102,3 +102,22 @@ DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 
 # Set the Redis server URL
 REDIS_URL = getenv("REDIS_URL", "redis://localhost:6379")
+
+# Setup custom commands
+COMMANDS_MODULE = "kym_scraper.commands"
+
+# Set the MongoDB settings
+MONGO_SETTINGS = {
+    "url": getenv("MONGO_URL", "mongodb://localhost:27017"),
+    "db": getenv("MONGO_DB", "default"),
+    "collection": getenv("MONGO_COLLECTION", "default"),
+}
+
+# Set the PostgreSQL connection details
+POSTGRES_SETTINGS = {
+    "dbname": getenv("POSTGRES_DB", "postgres"),
+    "user": getenv("POSTGRES_USER", "postgres"),
+    "password": getenv("POSTGRES_PASSWORD", "postgres"),
+    "host": getenv("POSTGRES_HOST", "localhost"),
+    "port": getenv("POSTGRES_PORT", "5432"),
+}

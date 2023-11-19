@@ -1,12 +1,12 @@
 import json
-from os import getenv
 
 from scrapy_redis.spiders import RedisSpider
+from scrapy.utils.project import get_project_settings
 from urllib.parse import unquote
 from collections import defaultdict
 from pymongo import MongoClient
 
-from ..utils.helper import ChildrenHelper
+from ..utils.helper import PostgresHelper
 
 
 class MemesSpider(RedisSpider):
@@ -29,11 +29,14 @@ class MemesSpider(RedisSpider):
     # In-memory list of children to be inserted into the database
     children = []
 
+    # Retreive settings from the project
+    settings = get_project_settings()
+
     # Setup MongoDB connection
-    mongo_url = getenv("MONGO_URL", "mongodb://localhost:27017")
-    client = MongoClient(mongo_url)
-    mongo_db = getenv("MONGO_DB", "default")
-    mongo_collection = getenv("MONGO_COLLECTION", "default")
+
+    mongo_client = MongoClient(settings.get("MONGO_SETTINGS")["url"])
+    mongo_db = settings.get("MONGO_SETTINGS")["db"]
+    mongo_collection = settings.get("MONGO_SETTINGS")["collection"]
 
     def parse(self, response):
         """
@@ -52,31 +55,24 @@ class MemesSpider(RedisSpider):
             entry["content"] = self.parse_content(response)
 
         # Insert the entry into the database
-        self.client[self.mongo_db][self.mongo_collection].insert_one(entry)
+        self.mongo_client[self.mongo_db][self.mongo_collection].insert_one(entry)
 
     def close(self, reason):
         """
         Called when the spider is closed.
         """
 
-        # Get connection details from environment variables
-        postgres_db = getenv("POSTGRES_DB", "postgres")
-        postgres_user = getenv("POSTGRES_USER", "postgres")
-        postgres_password = getenv("POSTGRES_PASSWORD", "postgres")
-        postgres_host = getenv("POSTGRES_HOST", "localhost")
-        postgres_port = getenv("POSTGRES_PORT", "5432")
-
         # Insert the children into the database
-        helper = ChildrenHelper(
-            postgres_db,
-            postgres_user,
-            postgres_password,
-            postgres_host,
-            postgres_port,
+        postgres_helper = PostgresHelper(**self.settings.get("POSTGRES_SETTINGS"))
+        postgres_helper.execute_many(
+            """
+            INSERT INTO children (parent, child) VALUES (%s, %s);
+            """,
+            self.children,
         )
-        self.log(f"Inserting {len(self.children)} children into the database")
-        helper.insert_batch(self.children)
-        helper.close_connection()
+
+        # Close the PostgreSQL connection
+        postgres_helper.close_connection()
 
     def parse_content(self, response):
         body = response.css(".bodycopy")
