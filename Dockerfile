@@ -1,4 +1,4 @@
-FROM python:3.13.0a1-slim-bookworm
+FROM python:3.10.13-bookworm
 
 # Setup working directory
 WORKDIR /app
