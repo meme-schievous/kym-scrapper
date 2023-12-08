@@ -57,6 +57,9 @@ class MemesSpider(RedisSpider):
         # Insert the entry into the database
         self.mongo_client[self.mongo_db][self.mongo_collection].insert_one(entry)
 
+        # Yield the entry
+        yield entry
+
     def close(self, reason):
         """
         Called when the spider is closed.
