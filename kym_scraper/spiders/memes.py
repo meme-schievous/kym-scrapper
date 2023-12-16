@@ -33,7 +33,6 @@ class MemesSpider(RedisSpider):
     settings = get_project_settings()
 
     # Setup MongoDB connection
-
     mongo_client = MongoClient(settings.get("MONGO_SETTINGS")["url"])
     mongo_db = settings.get("MONGO_SETTINGS")["db"]
     mongo_collection = settings.get("MONGO_SETTINGS")["collection"]
@@ -65,17 +64,18 @@ class MemesSpider(RedisSpider):
         Called when the spider is closed.
         """
 
-        # Insert the children into the database
-        postgres_helper = PostgresHelper(**self.settings.get("POSTGRES_SETTINGS"))
-        postgres_helper.execute_many(
-            """
-            INSERT INTO children (parent, child) VALUES (%s, %s);
-            """,
-            self.children,
-        )
+        if self.settings.get("PARSE_PARENT"):
+            # Insert the children into the database
+            postgres_helper = PostgresHelper(**self.settings.get("POSTGRES_SETTINGS"))
+            postgres_helper.execute_many(
+                """
+                INSERT INTO children (parent, child) VALUES (%s, %s);
+                """,
+                self.children,
+            )
 
-        # Close the PostgreSQL connection
-        postgres_helper.close_connection()
+            # Close the PostgreSQL connection
+            postgres_helper.close_connection()
 
     def parse_content(self, response):
         body = response.css(".bodycopy")
@@ -162,8 +162,9 @@ class MemesSpider(RedisSpider):
             "added": timestamps[1].css("::attr(title)").get(),
         }
 
-        # Get parent if it exists
-        if parent := response.css(".parent"):
+        # Get parent if it exists and parent parsing is enabled
+        parent = response.css(".parent")
+        if self.settings.get("PARSE_PARENT") and parent:
             parent_url = response.urljoin(parent.css("a::attr(href)").get())
             infos["parent"] = parent_url
 

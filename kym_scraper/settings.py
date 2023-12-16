@@ -121,3 +121,6 @@ POSTGRES_SETTINGS = {
     "host": getenv("POSTGRES_HOST", "localhost"),
     "port": getenv("POSTGRES_PORT", "5432"),
 }
+
+# Select parents 
+PARSE_PARENTS = getenv("PARSE_PARENTS", "True") == "True"
